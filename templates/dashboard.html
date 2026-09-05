@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - NourishNet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+        .navbar-custom { background: #059669; }
+        .custom-card { border: none; border-radius: 16px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-custom navbar-dark px-4 py-3 shadow-sm mb-4">
+    <div class="container-fluid">
+        <span class="navbar-brand fw-bold fs-4"><i class="fa-solid fa-hand-holding-heart me-2"></i>NourishNet</span>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-white small me-2"><i class="fa-solid fa-circle-user me-1"></i>{{ user.name }} ({{ 'Donor' if role == 'donor' else 'Receiver / Shelter' }})</span>
+            <a href="/logout" class="btn btn-outline-light btn-sm rounded-3">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- Flash & Notification Banner -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+            <div class="alert alert-{{cat}} alert-dismissible fade show rounded-4 shadow-sm mb-3" role="alert">
+                {{msg}}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    {% if notifications %}
+    <div class="alert alert-info border-0 shadow-sm rounded-4 mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h6 class="fw-bold mb-1"><i class="fa-solid fa-bell me-2"></i>Notifications ({{ notifications|length }})</h6>
+            {% for n in notifications %}
+                <p class="mb-0 small">• {{ n.message }}</p>
+            {% endfor %}
+        </div>
+        <a href="/clear_notifications" class="btn btn-sm btn-light border fw-semibold">Dismiss All</a>
+    </div>
+    {% endif %}
+
+    <!-- DONOR VIEW -->
+    {% if role == 'donor' %}
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="custom-card p-4">
+                <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-plus me-2"></i>Post Food Donation</h5>
+                <form action="/add_food" method="POST">
+                    <input type="text" name="food_item" class="form-control mb-3" placeholder="Food Details (e.g. Veg Rice & Curry)" required>
+                    <input type="text" name="quantity" class="form-control mb-3" placeholder="Quantity (e.g. 20 Packets)" required>
+                    <label class="form-label small text-muted">Expiry Time Today</label>
+                    <input type="time" name="expiry_time" class="form-control mb-3" required>
+                    <button type="submit" class="btn btn-success w-100 fw-bold">Post Availability</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Nearby Requests from Shelters -->
+            <div class="custom-card p-4 mb-4">
+                <h5 class="fw-bold text-warning text-dark mb-3"><i class="fa-solid fa-hand-holding-hand me-2"></i>Shelters Requesting Food Nearby</h5>
+                {% if not shelter_requests %}
+                    <p class="text-muted small mb-0">No active requests from shelters right now.</p>
+                {% endif %}
+                <div class="row g-3">
+                    {% for req in shelter_requests %}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column">
+                            <h6 class="fw-bold text-dark">{{ req.shelter_name }}</h6>
+                            <p class="mb-1 small"><strong>Needed:</strong> {{ req.food_needed }} ({{ req.quantity_needed }})</p>
+                            <p class="mb-1 small"><strong>Location:</strong> {{ req.location }}</p>
+                            <p class="mb-2 small"><strong>Phone:</strong> {{ req.contact_number }}</p>
+                            <form action="/accept_request/{{ req.id }}" method="POST" class="mt-auto">
+                                <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold text-dark">
+                                    <i class="fa-solid fa-check me-1"></i>Accept & Fulfill Request
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- My Listed Items -->
+            <div class="custom-card p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-list me-2"></i>My Listed Food Items</h5>
+                {% if not my_listings %}
+                    <p class="text-muted small">No active listings posted yet.</p>
+                {% endif %}
+                {% for item in my_listings %}
+                <div class="p-3 bg-light rounded-3 mb-2 border-start border-4 {% if item.status == 'Claimed' %}border-info{% else %}border-success{% endif %}">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="fw-bold mb-1">{{ item.food_item }} ({{ item.quantity }})</h6>
+                        <span class="badge {% if item.status == 'Claimed' %}bg-info text-dark{% else %}bg-success{% endif %}">{{ item.status }}</span>
+                    </div>
+                    {% if item.status == 'Claimed' %}
+                        <p class="mb-0 small text-primary mt-1"><strong>Claimed by:</strong> {{ item.claimed_by_name }} (📞 {{ item.claimed_by_contact }}) | 📍 {{ item.claimed_by_location }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- RECEIVER / SHELTER VIEW -->
+    {% elif role == 'receiver' %}
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="custom-card p-4">
+                <h5 class="fw-bold text-warning text-dark mb-3"><i class="fa-solid fa-bullhorn me-2"></i>Request Food Assistance</h5>
+                <form action="/request_food" method="POST">
+                    <input type="text" name="food_needed" class="form-control mb-3" placeholder="Food Needed (e.g. Rice Packets, Meals)" required>
+                    <input type="text" name="quantity_needed" class="form-control mb-3" placeholder="Quantity Needed (e.g. 30 Meals)" required>
+                    <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">Submit Food Request</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Food Available from Donors -->
+            <div class="custom-card p-4 mb-4">
+                <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-utensils me-2"></i>Available Food Listings Nearby</h5>
+                {% if not available_food %}
+                    <div class="alert alert-warning border-0 small">No food listings currently available. Check back soon!</div>
+                {% endif %}
+                <div class="row g-3">
+                    {% for item in available_food %}
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column">
+                            <h6 class="fw-bold">{{ item.food_item }} <span class="badge bg-success float-end">{{ item.quantity }}</span></h6>
+                            <p class="mb-1 small"><strong>Donor:</strong> {{ item.donor_name }}</p>
+                            <p class="mb-1 small"><strong>Pickup:</strong> {{ item.pickup_location }}</p>
+                            <p class="mb-1 small"><strong>Phone:</strong> {{ item.contact_number }}</p>
+                            <p class="text-danger small mb-3"><strong>Expires:</strong> {{ item.expiry_time }}</p>
+                            <form action="/claim_food/{{ item.id }}" method="POST" class="mt-auto">
+                                <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Claim Food</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- My Submitted Requests -->
+            <div class="custom-card p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>My Food Requests</h5>
+                {% if not my_requests %}
+                    <p class="text-muted small">No pending requests submitted.</p>
+                {% endif %}
+                {% for req in my_requests %}
+                <div class="p-3 bg-light rounded-3 mb-2 border-start border-4 {% if req.status == 'Accepted' %}border-success{% else %}border-warning{% endif %}">
+                    <div class="d-flex justify-content-between">
+                        <h6 class="fw-bold mb-1">{{ req.food_needed }} ({{ req.quantity_needed }})</h6>
+                        <span class="badge {% if req.status == 'Accepted' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ req.status }}</span>
+                    </div>
+                    {% if req.status == 'Accepted' %}
+                        <p class="mb-0 small text-success mt-1"><strong>Accepted by Donor:</strong> {{ req.accepted_by_name }} (📞 {{ req.accepted_by_contact }})</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
