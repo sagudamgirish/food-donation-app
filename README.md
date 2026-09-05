@@ -2,84 +2,98 @@
 
 NourishNet is a full-stack, web-based platform designed to bridge the gap between surplus food donors (restaurants, caterers, hotels) and receiving institutions (shelters, orphanages, and local NGOs). Built with a two-way request engine and real-time claim locking, NourishNet reduces municipal food waste while automating resource distribution for community relief.
 
----
-
 ## 🌟 Key Features
 
-* **Two-Way Match Engine:**
-  * **Donors → Receivers:** Donors post surplus food details, pickup addresses, and expiry times. Receivers can browse and claim available listings in real time.
-  * **Receivers → Donors:** Shelters and orphanages can broadcast urgent meal requirements (e.g., "Needs 40 lunch packets"), which donors can view and fulfill directly.
-* **Role-Based Access Control (RBAC):** Dedicated dashboards for **Donors** and **Receivers**, ensuring user-specific data visibility and context-aware action forms.
-* **Instant Claim Locking:** Automatically updates database row statuses to `Claimed` or `Accepted` upon user action, preventing double-allocation across network takers.
-* **Real-time Notifications:** In-app notification engine that alerts donors when their food is claimed, and notifies shelters when a donor accepts their meal request.
-* **Dynamic Time Filtering:** Automatically filters out expired food listings from the receiver feed based on time comparisons (`expiry_time > NOW()`).
+**Two-Way Match Engine**
+- **Donors → Receivers:** Donors post surplus food details, pickup addresses, and expiry times. Receivers can browse and claim available listings in real time.
+- **Receivers → Donors:** Shelters and orphanages can broadcast urgent meal requirements (e.g., "Needs 40 lunch packets"), which donors can view and fulfill directly.
 
----
+**Role-Based Access Control (RBAC)**
+Dedicated dashboards for Donors and Receivers, ensuring user-specific data visibility and context-aware action forms.
+
+**Instant Claim Locking**
+Automatically updates database row statuses to `Claimed` or `Accepted` upon user action, preventing double-allocation across network takers.
+
+**Real-time Notifications**
+In-app notification engine that alerts donors when their food is claimed, and notifies shelters when a donor accepts their meal request.
+
+**Dynamic Time Filtering**
+Automatically filters out expired food listings from the receiver feed based on time comparisons (`expiry_time > NOW()`).
 
 ## 🛠️ Tech Stack
 
-* **Frontend:** HTML5, CSS3, Bootstrap 5, Font Awesome
-* **Backend Framework:** Python (Flask), Gunicorn
-* **Cloud Database & Auth:** Supabase (PostgreSQL, Realtime APIs)
-* **Environment Management:** `python-dotenv`
-* **Version Control & CI/CD:** GitHub, Render.com
-
----
+- **Frontend:** HTML5, CSS3, Bootstrap 5, Font Awesome
+- **Backend Framework:** Python (Flask), Gunicorn
+- **Cloud Database & Auth:** Supabase (PostgreSQL, Realtime APIs)
+- **Environment Management:** python-dotenv
+- **Version Control & CI/CD:** GitHub, Render.com
 
 ## 📂 Project Structure
 
+```
 food-donation-app/
-├── app.py                  # Main Flask application logic & API routes
-├── requirements.txt        # Python dependencies for production build
+├── app.py                 # Main Flask application logic & API routes
+├── requirements.txt       # Python dependencies for production build
 ├── Procfile                # Gunicorn execution command for Render deployment
 ├── .env                    # Environment variables (excluded from git)
-├── .gitignore              # Git ignore rules for security
+├── .gitignore               # Git ignore rules for security
 └── templates/
     ├── login.html          # User authentication login view
     ├── register.html       # Role-based user registration view
-    └── dashboard.html      # Authenticated donor & receiver dashboard
+    └── dashboard.html       # Authenticated donor & receiver dashboard
+```
 
-🚀 Local Setup Instructions
-Prerequisites
-Python 3.9+ installed on your system.
+## 🚀 Local Setup Instructions
 
-A Supabase project with PostgreSQL access.
+### Prerequisites
+- Python 3.9+ installed on your system
+- A Supabase project with PostgreSQL access
 
-Installation
-Clone the Repository:
+### Installation
 
-Bash
-git clone [https://github.com/YOUR_USERNAME/food-donation-app.git](https://github.com/YOUR_USERNAME/food-donation-app.git)
+**1. Clone the Repository**
+```bash
+git clone https://github.com/YOUR_USERNAME/food-donation-app.git
 cd food-donation-app
-Set Up Virtual Environment:
+```
 
-Bash
+**2. Set Up Virtual Environment**
+```bash
 python -m venv venv
+
 # On Windows:
 venv\Scripts\activate
+
 # On macOS/Linux:
 source venv/bin/activate
-Install Dependencies:
+```
 
-Bash
+**3. Install Dependencies**
+```bash
 pip install -r requirements.txt
-Configure Environment Variables:
-Create a .env file in the root directory and append your keys:
+```
 
-Code snippet
-SUPABASE_URL=[https://your-supabase-project.supabase.co](https://your-supabase-project.supabase.co)
+**4. Configure Environment Variables**
+
+Create a `.env` file in the root directory and add your keys:
+```
+SUPABASE_URL=https://your-supabase-project.supabase.co
 SUPABASE_KEY=your-supabase-anon-key
 FLASK_SECRET_KEY=your-flask-secret-key
-Run Application:
+```
 
-Bash
+**5. Run Application**
+```bash
 python app.py
-Access the local web server at http://127.0.0.1:5000.
+```
 
-🗄️ Database Schema Setup (Supabase SQL)
+Access the local web server at `http://127.0.0.1:5000`.
+
+## 🗄️ Database Schema Setup (Supabase SQL)
+
 Run the following SQL script inside your Supabase SQL Editor to initialize all necessary database tables:
 
-SQL
+```sql
 -- 1. Users Table
 CREATE TABLE users (
     id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
@@ -134,10 +148,10 @@ CREATE TABLE notifications (
     is_read BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-🔮 Future Scope & Enhancements
-Monetized Delivery Logistics: Integration of third-party delivery APIs (e.g., Dunzo/Porter) where volunteer drivers receive micro-payouts funded by donors to transport food directly to remote shelters.
+```
 
-Geofenced Distance Filtering: Implementation of Google Maps Distance Matrix API to sort available listings based on exact travel radius (e.g., within 5 km).
+## 🔮 Future Scope & Enhancements
 
-Automated Storage Pruning: Utilizing PostgreSQL scheduled jobs (pg_cron) to hard-delete expired rows automatically, optimizing cloud storage utilization.
-
+- **Monetized Delivery Logistics:** Integration of third-party delivery APIs (e.g., Dunzo/Porter) where volunteer drivers receive micro-payouts funded by donors to transport food directly to remote shelters.
+- **Geofenced Distance Filtering:** Implementation of Google Maps Distance Matrix API to sort available listings based on exact travel radius (e.g., within 5 km).
+- **Automated Storage Pruning:** Utilizing PostgreSQL scheduled jobs (`pg_cron`) to hard-delete expired rows automatically, optimizing cloud storage utilization.
